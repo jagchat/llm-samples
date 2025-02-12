@@ -9,5 +9,5 @@
 
 - Ensure .venv is activated
 - Ensure python packages are installed in the virtual environment
-- Run `./start.ps1`
+- Run `./start-chroma.ps1`
 - Run `python3 main.py`
