@@ -1,0 +1,9 @@
+{
+  "main_db": {
+    "host": "localhost",
+    "port": "35432",
+    "dbname": "maindb",
+    "user": "postgres",
+    "password": "test"
+  }
+}

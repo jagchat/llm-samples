@@ -4,9 +4,9 @@ services:
     build:
       context: ./
       dockerfile: ./DockerFile
-    image: rag-main-db
+    image: chatbot-demo-main-db-image
     environment:
       - POSTGRES_PASSWORD=test
-    container_name: rag-main-db-local
+    container_name: chatbot-demo-main-db
     ports:
-      - "5432:5432"
+      - "35432:5432"
