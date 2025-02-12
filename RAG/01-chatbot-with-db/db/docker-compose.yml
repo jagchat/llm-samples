@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+  main-db:
+    build:
+      context: ./
+      dockerfile: ./DockerFile
+    image: rag-main-db
+    environment:
+      - POSTGRES_PASSWORD=test
+    container_name: rag-main-db-local
+    ports:
+      - "5432:5432"
