@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  memcached-db:
+    image: memcached:1.6.36
+    container_name: chatbot-demo-memcached-server
+    ports:
+      - "31211:11211"
+
+  memcached-admin-ui:
+    image: hatamiarash7/memcached-admin:latest
+    container_name: chatbot-demo-memcached-admin-ui
+    ports:
+      - "31212:80"
+    environment:
+      - MEMCACHED_HOST=memcached-db
+      - MEMCACHED_PORT=11211

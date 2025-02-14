@@ -1,4 +1,4 @@
-- Used following prompt to create shifts generating function:
+- Used following AI prompt to create shifts generating function:
 
 ```
 I am using PostgresSQL.  I have following departments generated through following sql:

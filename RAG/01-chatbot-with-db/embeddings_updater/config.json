@@ -5,5 +5,9 @@
     "dbname": "maindb",
     "user": "postgres",
     "password": "test"
+  },
+  "state_db": {
+    "host": "localhost",
+    "port": "31211"
   }
 }

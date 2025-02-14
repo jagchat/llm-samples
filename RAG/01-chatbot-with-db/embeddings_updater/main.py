@@ -3,9 +3,21 @@ import traceback
 from logger import get_logger
 from config_loader import app_config
 from db import get_db
+from stateDb import get_state
 import time
 
 logger = get_logger(__name__)
+
+def getLastRecordId():
+    logger.info("getLastRecordId: Started..")
+    result = get_state().getValue("last_record_id_processed")
+    logger.info("getLastRecordId: Completed..")
+    return result
+
+def setLastRecordId(recordId):
+    logger.info("setLastRecordId: Started..")
+    get_state().setValue("last_record_id_processed", recordId)
+    logger.info("setLastRecordId: Completed..")
 
 async def getShiftData(payload):
     logger.info("getShiftData: Started..")
@@ -13,6 +25,12 @@ async def getShiftData(payload):
     # if not last_record_id_processed:
     #     raise Exception("last_record_id_processed is required")
     
+    last_record_id_processed = getLastRecordId()
+    if not last_record_id_processed:
+        logger.info("getShiftData: Last Record Id not found..")
+    else:
+        logger.info(f"getShiftData: Last Record Id found: {last_record_id_processed}")
+
     sql = f"""
             SELECT 
                 s.shift_id, s.emp_id, s.dept_id, s.start_date, s.start_time, s.end_date, s.end_time
@@ -22,7 +40,7 @@ async def getShiftData(payload):
     """
 
     result = await get_db().fetch_data_return_json(sql)
-
+    setLastRecordId(time.strftime('%x %X'))
     logger.info("getShiftData: Completed..")
     #return {"isError": "false", "data": result} 
     print(result)

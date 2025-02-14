@@ -5,7 +5,9 @@ This is a sample of how to use the RAG library in a project that uses a database
 ## Prerequisites
 
 - Docker
+- Python
 
 ## How to run
 
-- Ensure database is up and running. Check "db" folder to run docker container for db. The database will have some sample data populated
+- run `\start.ps1`
+- run `\embeddings_updater\main.py` (check `embeddings_updater\Readme.md` for more information)
