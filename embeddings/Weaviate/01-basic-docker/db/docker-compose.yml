@@ -1,21 +1,36 @@
 version: "3.7"
 services:
-  chroma-db:
-    image: chromadb/chroma:0.6.3
-    container_name: chatbot-demo-chroma-server
+  weaviate:
+    container_name: demo-weaviate
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
+    image: semitechnologies/weaviate:latest
     ports:
-      - "38000:8000"
-    #http://localhost:38000/api/v1/heartbeat
+      - 9080:8080
+      - 50051:50051
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: ""
 
   # https://hub.docker.com/r/3x3cut0r/vector-admin
   # https://github.com/Mintplex-Labs/vector-admin/tree/master/docker
-  # - to connect to chroma db, use: http://host.docker.internal:38000 (with no header/secret)
+  # - to connect to chroma db, use: http://host.docker.internal:9080 (with no header/secret)
   # - Bypass initial Auth (if login errors):
   #     Email: root@vectoradmin.com
   #     Password: password
   # - delete volumes after shutting down
   vector-admin:
-    container_name: chatbot-demo-vector-admin
+    container_name: demo-vector-admin
     image: 3x3cut0r/vector-admin:latest
     restart: unless-stopped
     ports:
@@ -38,7 +53,7 @@ services:
 
   # https://hub.docker.com/_/postgres
   postgres:
-    container_name: chatbot-demo-vector-admin-postgres
+    container_name: demo-vector-admin-postgres
     image: postgres:16-alpine
     restart: always
     # ports:
@@ -51,8 +66,10 @@ services:
       POSTGRES_DB: "vectoradmin"
 volumes:
   vector-admin-postgres:
-    name: chatbot-demo-vector-admin-postgres
+    name: demo-vector-admin-postgres
   vector-admin-data:
-    name: chatbot-demo-vector-admin-data
+    name: demo-vector-admin-data
   vector-admin-hotdir:
-    name: chatbot-demo-vector-admin-hotdir
+    name: demo-vector-admin-hotdir
+  weaviate_data:
+    name: demo-weaviate-data

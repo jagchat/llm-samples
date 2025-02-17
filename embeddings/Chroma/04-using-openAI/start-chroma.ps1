@@ -1,0 +1,1 @@
+docker run -d -p 9000:8000 --name chroma-test-server  chromadb/chroma:0.6.3

@@ -1,5 +1,7 @@
 # ChatBot using RAG with a database
 
+NOT WORKING - work in progress
+
 This is a sample of how to use the RAG library in a project that uses a database.
 
 ## Prerequisites
