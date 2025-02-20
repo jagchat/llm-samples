@@ -92,7 +92,7 @@ def generateEmbeddings(records):
             f_end_date = s_end_date.strftime("%m/%d/%Y")
             record_text = (
                 f"Employee {record['first_name']} {record['last_name']} with Employee ID: {record['emp_id']} "
-                f"is scheduled to work "
+                f"is scheduled to work in a shift "
                 f"on date {f_start_date} "
                 f"in department {record['dept_name']} (Department ID: {record['dept_id']}) "
                 f"from start time {str(record['start_time'])} to end date {f_end_date} and end time {str(record['end_time'])} "
@@ -120,36 +120,14 @@ def generateEmbeddings(records):
 def updateEmbeddings(records):
         logger.info("updateEmbeddings: Started..")
 
-        # Text splitter for chunking
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=50,
-            length_function=len
-        )
-        
+        ids, documents, metadatas = [], [], []
+
         # Process data in batches
         for data in generateEmbeddings(records):
-            documents = text_splitter.split_text(data["text"])
-            vector_store.add_texts(documents)
-
-        # ids, documents, metadatas = [], [], []
-
-        # for data in generateEmbeddings(records):
-        #     chunks = text_splitter.split_text(data["text"])  # Split text into chunks
-
-        #     # Append chunks & metadata to batch
-        #     for i, chunk in enumerate(chunks):
-        #         ids.append(f"{data['metadata']['shift_id']}-{i}")  # Unique ID per chunk
-        #         documents.append(chunk)  # Store chunked text
-        #         metadatas.append(data["metadata"])  # Attach metadata
-
-        # # Store in ChromaDB
-        # if ids:
-        #     vector_store.add_texts(
-        #         texts=documents,
-        #         metadatas=metadatas,
-        #         ids=ids
-        #     )  
+            documents.append(data["text"])
+            metadatas.append(data["metadata"])
+        
+        vector_store.add_texts(texts=documents, metadatas=metadatas)
 
         logger.info("updateEmbeddings: Completed..")
 

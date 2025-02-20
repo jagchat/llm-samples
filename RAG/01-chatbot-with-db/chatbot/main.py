@@ -5,8 +5,9 @@ from config_loader import app_config
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import ConversationalRetrievalChain, StuffDocumentsChain, LLMChain
 from langchain.llms import Ollama
+from langchain.prompts import PromptTemplate
 from chromadb import HttpClient 
 
 logger = get_logger(__name__)
@@ -24,18 +25,70 @@ ollm = Ollama(model="llama3.2:latest")
 def get_response(chatState, question: str) -> str:
     logger.info("get_response: Started..")
 
+    custom_prompt = PromptTemplate(
+        input_variables=["context", "question"],
+        template=(
+            "You are an AI assistant that answers queries based on the provided documents. "
+            "You are a smart assistant. Think step-by-step before answering."
+            "Here are relevant facts:\n"
+            "Facts:\n{context}\n\n"
+            "\nUse above data to answer the user's question."
+            "Question: {question}\n"
+            "Think logically, then give your answer."
+            "Answer:"
+        ),
+    )
+
     # retriever = vector_store.as_retriever(
     #     search_type="mmr",  # Maximal Marginal Relevance for diverse results
     #     search_kwargs={"k": 5}  # Fetch top 5 relevant chunks
     # )
 
-    # Create retrieval chain
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=ollm,
-        retriever=vector_store.as_retriever(),
+    retriever = vector_store.as_retriever()
+
+    # # Create retrieval chain
+    # chain = ConversationalRetrievalChain.from_llm(
+    #     llm=ollm,
+    #     retriever=retriever,
+    #     memory=chatState,
+    #     chain_type_kwargs={"prompt": custom_prompt}
+    # )
+
+        # Create an LLMChain with a custom prompt
+    llm_chain = LLMChain(llm=ollm, prompt=custom_prompt)
+
+    # Wrap LLMChain inside StuffDocumentsChain to process multiple docs
+    doc_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
+
+    question_generator = LLMChain(llm=ollm, prompt=PromptTemplate(
+        input_variables=["chat_history", "question"],
+        template="Given the following conversation history and a follow-up question, rephrase it into a standalone question.\n\n"
+                 "Chat History:\n{chat_history}\n\n"
+                 "Follow-up Question: {question}\n\n"
+                 "Standalone Question:"
+    ))
+
+    # Create ConversationalRetrievalChain using StuffDocumentsChain
+    chain = ConversationalRetrievalChain(
+        retriever=retriever,
+        combine_docs_chain=doc_chain,  
+        question_generator=question_generator, 
         memory=chatState
-    )    
-    response = chain({"question": question})
+    )
+
+    # Retrieve documents manually for debugging
+    retrieved_docs = retriever.get_relevant_documents(question)
+    context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+    # Format the prompt manually for debugging
+    formatted_prompt = custom_prompt.format(context=context, question=question)
+    print("\n==== Formatted Prompt Sent to LLM ====\n")
+    print(formatted_prompt)  # Debugging output
+
+    # Generate response
+    response = chain.invoke({"question": question, "chat_history": chatState.chat_memory.messages})
+    
+    chatState.save_context({"question": question}, {"answer": response["answer"]})
 
     logger.info("get_response: Completed..")
     return response['answer']
